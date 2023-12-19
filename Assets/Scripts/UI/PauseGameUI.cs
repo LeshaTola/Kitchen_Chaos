@@ -23,7 +23,7 @@ public class PauseGameUI : MonoBehaviour {
 
 	private void Start() {
 		GameManager.Instance.OnGamePaused += GameManager_OnGamePaused;
-		GameManager.Instance.OnGameUnpaused += GameManager_OnGameUnpaused;
+		GameManager.Instance.OnGameUnPaused += GameManager_OnGameUnpaused;
 
 		Hide();
 	}
