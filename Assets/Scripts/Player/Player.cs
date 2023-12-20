@@ -5,24 +5,29 @@ using UnityEngine;
 public class Player : NetworkBehaviour, IKitchenObjectParent
 {
 	[SerializeField] private float moveSpeed;
-	//[SerializeField] private GameInput gameInput;
 	[SerializeField] private LayerMask counterLayerMask;
 	[SerializeField] private Transform spawnPoint;
 
 	public event EventHandler<OnSelectedCounterChangedEventArgs> OnSelectedCounterChanged;
+
 	public class OnSelectedCounterChangedEventArgs : EventArgs { public BaseCounter baseCounter; }
-	public static event EventHandler OnPickUpSmth;
-	//public static Player Instance { get; private set; }
+	public static event EventHandler OnAnyPickUpSmth;
+	public static event EventHandler OnAnyPlayerSpawned;
+	public static Player LocalInstance { get; private set; }
 
 	private bool isWalking;
 	private Vector3 lastDir;
 	private BaseCounter baseCounter;
 	private KitchenObject kitchenObject;
 
-	/*private void Awake()
+	public override void OnNetworkSpawn()
 	{
-		Instance = this;
-	}*/
+		if (IsOwner)
+		{
+			LocalInstance = this;
+			OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
+		}
+	}
 
 	private void Start()
 	{
@@ -134,7 +139,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 	public void SetKitchenObject(KitchenObject kitchenObject)
 	{
 		this.kitchenObject = kitchenObject;
-		OnPickUpSmth?.Invoke(this, EventArgs.Empty);
+		OnAnyPickUpSmth?.Invoke(this, EventArgs.Empty);
 	}
 
 	public KitchenObject GetKitchenObject()
@@ -154,5 +159,10 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 	public Transform GetKitchenObjectFollowTransform()
 	{
 		return spawnPoint;
+	}
+	public static void ResetStaticData()
+	{
+		OnAnyPlayerSpawned = null;
+		OnAnyPickUpSmth = null;
 	}
 }
