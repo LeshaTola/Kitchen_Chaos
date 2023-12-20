@@ -2,7 +2,8 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class GameInput : MonoBehaviour {
+public class GameInput : MonoBehaviour
+{
 	public event EventHandler InteractEvent;
 	public event EventHandler InteractAlternativeEvent;
 	public event EventHandler Pause;
@@ -12,7 +13,8 @@ public class GameInput : MonoBehaviour {
 	private const string PLAYER_PREFS_BINDING = "Binding";
 	public static GameInput Instance { get; private set; }
 
-	public enum Binding {
+	public enum Binding
+	{
 		MoveUp,
 		MoveDown,
 		MoveLeft,
@@ -22,10 +24,12 @@ public class GameInput : MonoBehaviour {
 		Pause,
 	}
 
-	private void Awake() {
+	private void Awake()
+	{
 		Instance = this;
 		playerController = new PlayerController();
-		if(PlayerPrefs.HasKey(PLAYER_PREFS_BINDING)) {
+		if (PlayerPrefs.HasKey(PLAYER_PREFS_BINDING))
+		{
 			playerController.LoadBindingOverridesFromJson(PlayerPrefs.GetString(PLAYER_PREFS_BINDING));
 		}
 		playerController.Player.Enable();
@@ -35,7 +39,8 @@ public class GameInput : MonoBehaviour {
 		playerController.Player.Pause.performed += Pause_performed;
 	}
 
-	private void OnDestroy() {
+	private void OnDestroy()
+	{
 		playerController.Player.Interact.performed -= Interact_performed;
 		playerController.Player.InteractAlternative.performed -= InteractAlternative_performed;
 		playerController.Player.Pause.performed -= Pause_performed;
@@ -43,26 +48,32 @@ public class GameInput : MonoBehaviour {
 		playerController.Dispose();
 	}
 
-	private void Pause_performed(InputAction.CallbackContext obj) {
+	private void Pause_performed(InputAction.CallbackContext obj)
+	{
 		Pause?.Invoke(this, EventArgs.Empty);
 	}
 
-	public Vector2 GetMovementNormalized() {
+	public Vector2 GetMovementNormalized()
+	{
 		Vector2 inputVector = playerController.Player.Move.ReadValue<Vector2>();
 		inputVector = inputVector.normalized;
 		return inputVector;
 	}
 
-	private void InteractAlternative_performed(InputAction.CallbackContext obj) {
+	private void InteractAlternative_performed(InputAction.CallbackContext obj)
+	{
 		InteractAlternativeEvent?.Invoke(this, EventArgs.Empty);
 	}
 
-	private void Interact_performed(InputAction.CallbackContext obj) {
+	private void Interact_performed(InputAction.CallbackContext obj)
+	{
 		InteractEvent?.Invoke(this, EventArgs.Empty);
 	}
 
-	public string GetBindingText(Binding binding) {
-		switch (binding) {
+	public string GetBindingText(Binding binding)
+	{
+		switch (binding)
+		{
 			default:
 			case Binding.Interact:
 				return playerController.Player.Interact.bindings[0].ToDisplayString();
@@ -82,12 +93,14 @@ public class GameInput : MonoBehaviour {
 
 	}
 
-	public void RebindBinding(Binding binding, Action OnActionRebound) {
+	public void RebindBinding(Binding binding, Action OnActionRebound)
+	{
 		playerController.Player.Disable();
 		InputAction inputAction;
 		int inputBinding;
 
-		switch (binding) {
+		switch (binding)
+		{
 			default:
 			case Binding.Interact:
 				inputAction = playerController.Player.Interact;
@@ -119,7 +132,8 @@ public class GameInput : MonoBehaviour {
 				break;
 		}
 
-		inputAction.PerformInteractiveRebinding(inputBinding).OnComplete((callback) => {
+		inputAction.PerformInteractiveRebinding(inputBinding).OnComplete((callback) =>
+		{
 			callback.Dispose();
 			playerController.Player.Enable();
 			OnActionRebound();

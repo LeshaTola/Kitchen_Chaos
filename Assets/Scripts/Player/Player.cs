@@ -6,7 +6,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 {
 	[SerializeField] private float moveSpeed;
 	//[SerializeField] private GameInput gameInput;
-	[SerializeField] private LayerMask countrerLayerMask;
+	[SerializeField] private LayerMask counterLayerMask;
 	[SerializeField] private Transform spawnPoint;
 
 	public event EventHandler<OnSelectedCounterChangedEventArgs> OnSelectedCounterChanged;
@@ -48,6 +48,11 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
 	void Update()
 	{
+		if (!IsOwner)
+		{
+			return;
+		}
+
 		HandleMovement();
 		HandleInteract();
 	}
@@ -56,21 +61,23 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 	{
 		return isWalking;
 	}
+
 	private void HandleMovement()
 	{
+
 		Vector2 inputVector = GameInput.Instance.GetMovementNormalized();
 
 		Vector3 moveDir = new Vector3(inputVector.x, 0, inputVector.y);
 
-		float moveDistace = moveSpeed * Time.deltaTime;
+		float moveDistance = moveSpeed * Time.deltaTime;
 		float playerRadius = .65f;
 		float playerHeight = 2f;
-		bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDir, moveDistace);
+		bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDir, moveDistance);
 
 		if (!canMove)
 		{
 			Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
-			canMove = moveDir.x != 0 && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirX, moveDistace);
+			canMove = moveDir.x != 0 && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirX, moveDistance);
 
 			if (canMove)
 			{
@@ -79,7 +86,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 			else
 			{
 				Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
-				canMove = moveDir.z != 0 && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirZ, moveDistace);
+				canMove = moveDir.z != 0 && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirZ, moveDistance);
 
 				if (canMove)
 				{
@@ -90,7 +97,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 		}
 
 		if (canMove)
-			transform.position += moveDir * moveDistace;
+			transform.position += moveDir * moveDistance;
 
 		isWalking = moveDir != Vector3.zero;
 
@@ -107,7 +114,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 		if (viewDir != Vector3.zero)
 			lastDir = viewDir;
 
-		if (Physics.Raycast(transform.position, lastDir, out RaycastHit raycastHit, interactDistance, countrerLayerMask))
+		if (Physics.Raycast(transform.position, lastDir, out RaycastHit raycastHit, interactDistance, counterLayerMask))
 			if (raycastHit.transform.TryGetComponent(out BaseCounter baseCounter))
 				SetSelectedCounter(baseCounter);
 			else
