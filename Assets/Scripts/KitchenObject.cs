@@ -1,51 +1,79 @@
-using System.Collections;
-using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class KitchenObject : MonoBehaviour {
+public class KitchenObject : NetworkBehaviour
+{
 	[SerializeField] KitchenObjectSO kitchenObjectSO;
 
-
 	private IKitchenObjectParent kitchenObjectParent;
+	private FollowObject followObject;
+
+	protected virtual void Awake()
+	{
+		followObject = GetComponent<FollowObject>();
+	}
 
 	public KitchenObjectSO GetKitchenObjectSO() { return kitchenObjectSO; }
-	public void SetKitchenObjectParent(IKitchenObjectParent kitchenObjectParent) {
-		if (this.kitchenObjectParent != null) {
+
+	public void SetKitchenObjectParent(IKitchenObjectParent kitchenObjectParent)
+	{
+		SetKitchenObjectParentServerRpc(kitchenObjectParent.GetNetworkObject());
+	}
+
+	[ServerRpc(RequireOwnership = false)]
+	private void SetKitchenObjectParentServerRpc(NetworkObjectReference kitchenObjectParentNetworkObjectReference)
+	{
+		SetKitchenObjectParentClientRpc(kitchenObjectParentNetworkObjectReference);
+	}
+
+	[ClientRpc]
+	private void SetKitchenObjectParentClientRpc(NetworkObjectReference kitchenObjectParentNetworkObjectReference)
+	{
+		kitchenObjectParentNetworkObjectReference.TryGet(out NetworkObject kitchenObjectParentNetworkObject);
+		var kitchenObjectParent = kitchenObjectParentNetworkObject.GetComponent<IKitchenObjectParent>();
+
+		if (this.kitchenObjectParent != null)
+		{
 			this.kitchenObjectParent.ClearKitchenObject();
 		}
 
 		this.kitchenObjectParent = kitchenObjectParent;
 
-		if (kitchenObjectParent.HasKitchenObject()) {
-			Debug.LogError("Kitchen object Parent olredy exist");
+		if (kitchenObjectParent.HasKitchenObject())
+		{
+			Debug.LogError("Kitchen object Parent already exist");
 		}
 		kitchenObjectParent.SetKitchenObject(this);
 
-		transform.parent = kitchenObjectParent.GetKitchenObjectFollowTransform();
-		transform.localPosition = Vector3.zero;
+		followObject.SetFollowTransform(kitchenObjectParent.GetKitchenObjectFollowTransform());
 	}
 
-	public IKitchenObjectParent GetKitchenObjectParent() {
-		return this.kitchenObjectParent;
+	public IKitchenObjectParent GetKitchenObjectParent()
+	{
+		return kitchenObjectParent;
 	}
 
-	public static void SpawnKitchenObject(KitchenObjectSO kitchenObjectSO, IKitchenObjectParent kitchenObjectParent) {
-		Transform kitchenObjectPrefapTransform = Instantiate(kitchenObjectSO.prefabs);
-		kitchenObjectPrefapTransform.GetComponent<KitchenObject>().SetKitchenObjectParent(kitchenObjectParent);
+	public static void SpawnKitchenObject(KitchenObjectSO kitchenObjectSO, IKitchenObjectParent kitchenObjectParent)
+	{
+		KitchenObjectMultiplayer.Instance.SpawnKitchenObject(kitchenObjectSO, kitchenObjectParent);
 	}
 
-	public bool TryGetPlate(out PlateKitchenObject plateKitchenObject) {
-		if(this is PlateKitchenObject) {
+	public bool TryGetPlate(out PlateKitchenObject plateKitchenObject)
+	{
+		if (this is PlateKitchenObject)
+		{
 			plateKitchenObject = this as PlateKitchenObject;
 			return true;
 		}
-		else {
+		else
+		{
 			plateKitchenObject = null;
 			return false;
 		}
 	}
 
-	public void DestroySelf() {
+	public void DestroySelf()
+	{
 		GetKitchenObjectParent().SetKitchenObject(null);
 		Destroy(gameObject);
 	}

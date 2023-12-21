@@ -11,7 +11,7 @@ public class UI_Elements : MonoBehaviour
 		plateKitchenObject.OnAddIngredient += PlateKitchenObject_OnAddIngredient;
 	}
 
-	private void PlateKitchenObject_OnAddIngredient(object sender, PlateKitchenObject.OnAddIngredientEventArds e)
+	private void PlateKitchenObject_OnAddIngredient(object sender, PlateKitchenObject.OnAddIngredientEventArgs e)
 	{
 		UpdateUI();
 	}

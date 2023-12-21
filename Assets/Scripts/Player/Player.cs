@@ -165,4 +165,9 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 		OnAnyPlayerSpawned = null;
 		OnAnyPickUpSmth = null;
 	}
+
+	public NetworkObject GetNetworkObject()
+	{
+		return NetworkObject;
+	}
 }
