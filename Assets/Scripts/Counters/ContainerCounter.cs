@@ -1,19 +1,32 @@
-using System.Collections;
 using System;
-using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
-public class ContainerCounter : BaseCounter {
+public class ContainerCounter : BaseCounter
+{
 	[SerializeField] private KitchenObjectSO kitchenObjectSO;
 
 	public event EventHandler OnPlayerGrabedObject;
 
-	public override void Interact(Player player) {
-		if (!player.HasKitchenObject()) {
+	public override void Interact(Player player)
+	{
+		if (!player.HasKitchenObject())
+		{
 			KitchenObject.SpawnKitchenObject(kitchenObjectSO, player);
 
-			OnPlayerGrabedObject?.Invoke(this, EventArgs.Empty);
+			InteractServerRpc();
 		}
+	}
+
+	[ServerRpc(RequireOwnership = false)]
+	private void InteractServerRpc()
+	{
+		InteractClientRpc();
+	}
+
+	[ClientRpc]
+	private void InteractClientRpc()
+	{
+		OnPlayerGrabedObject?.Invoke(this, EventArgs.Empty);
 	}
 }
