@@ -1,55 +1,62 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Windows;
 
-public class CuttingCounter : BaseCounter,IHasProgressBar {
+public class CuttingCounter : BaseCounter, IHasProgressBar
+{
 
 	public event EventHandler<IHasProgressBar.OnProgressChangedEventArgs> OnProgressChanged;
 	public event EventHandler OnCut;
 	public static event EventHandler OnAnyCut;
 
-	new public static void ResetStaticData() {
+	new public static void ResetStaticData()
+	{
 		OnAnyCut = null;
 	}
 
 	[SerializeField] private CuttingRecepySO[] cuttingRecepySOArray;
-	
+
 	private int cuttingProgress;
-	public override void Interact(Player player) {
-		if (!HasKitchenObject()) {
+	public override void Interact(Player player)
+	{
+		if (!HasKitchenObject())
+		{
 			// Если на столе ничего нет
-			if (player.HasKitchenObject()) {
+			if (player.HasKitchenObject())
+			{
 				// У игрока что-то есть
-				if (HasOutputWithInput(player.GetKitchenObject().GetKitchenObjectSO())) {
-					// Ингридиенты подходят по рецепту
+				if (HasOutputWithInput(player.GetKitchenObject().GetKitchenObjectSO()))
+				{
+					// Ингредиенты подходят по рецепту
 					player.GetKitchenObject().SetKitchenObjectParent(this);
-					cuttingProgress = 0;
-					CuttingRecepySO cuttingRecepySO = GetCuttingRecepySO(GetKitchenObject().GetKitchenObjectSO());
-					OnProgressChanged?.Invoke(this, new IHasProgressBar.OnProgressChangedEventArgs() {
-						progressNormalised = (float)cuttingProgress / cuttingRecepySO.cuttingProgressMax
-					});
 
+					InteractServerRpc();
 				}
-
 			}
 		}
-		else {
+		else
+		{
 			// на столе что-то есть
-			if (player.HasKitchenObject()) {
-				if (player.GetKitchenObject().TryGetPlate(out PlateKitchenObject plateKitchenObject)) {
+			if (player.HasKitchenObject())
+			{
+				if (player.GetKitchenObject().TryGetPlate(out PlateKitchenObject plateKitchenObject))
+				{
 					// И это что-то это тарелка
 					if (plateKitchenObject.TryToAddIngredient(GetKitchenObject().GetKitchenObjectSO()))
-						GetKitchenObject().DestroySelf();
+					{
+						KitchenObject.DestroyKitchenObject(GetKitchenObject());
+					}
 				}
-				else {
+				else
+				{
 					// Если у игрока не тарелка
 				}
 			}
-			else {
+			else
+			{
 				GetKitchenObject().SetKitchenObjectParent(player);
-				OnProgressChanged?.Invoke(this, new IHasProgressBar.OnProgressChangedEventArgs() {
+				OnProgressChanged?.Invoke(this, new IHasProgressBar.OnProgressChangedEventArgs()
+				{
 					progressNormalised = 0
 				});
 			}
@@ -57,45 +64,91 @@ public class CuttingCounter : BaseCounter,IHasProgressBar {
 		}
 	}
 
-	public override void InteractAlternative(Player player) {
-		if(HasKitchenObject() && HasOutputWithInput(GetKitchenObject().GetKitchenObjectSO())) {
-			KitchenObjectSO outputKitchenObjectSO = GetOutputForInput(GetKitchenObject().GetKitchenObjectSO());
-			cuttingProgress++;
-			CuttingRecepySO cuttingRecepySO = GetCuttingRecepySO(GetKitchenObject().GetKitchenObjectSO());
+	[ServerRpc(RequireOwnership = false)]
+	private void InteractServerRpc()
+	{
+		InteractClientRpc();
+	}
 
-			OnProgressChanged?.Invoke(this, new IHasProgressBar.OnProgressChangedEventArgs() {
-				progressNormalised = (float) cuttingProgress / cuttingRecepySO.cuttingProgressMax
-			}) ;
-			OnCut?.Invoke(this, EventArgs.Empty);
-			OnAnyCut?.Invoke(this, EventArgs.Empty);
+	[ClientRpc]
+	private void InteractClientRpc()
+	{
+		cuttingProgress = 0;
+		OnProgressChanged?.Invoke(this, new IHasProgressBar.OnProgressChangedEventArgs()
+		{
+			progressNormalised = 0f
+		});
+	}
 
-			if (cuttingProgress >= GetCuttingRecepySO(GetKitchenObject().GetKitchenObjectSO()).cuttingProgressMax) {
-				GetKitchenObject().DestroySelf();
-				KitchenObject.SpawnKitchenObject(outputKitchenObjectSO, this);
-			}
+	public override void InteractAlternative(Player player)
+	{
+		if (HasKitchenObject() && HasOutputWithInput(GetKitchenObject().GetKitchenObjectSO()))
+		{
+			InteractAlternativeServerRpc();
+			TestFinishingCuttingServerRpc();
 		}
 	}
 
-	private bool HasOutputWithInput(KitchenObjectSO input) {
+	[ServerRpc(RequireOwnership = false)]
+	private void InteractAlternativeServerRpc()
+	{
+		InteractAlternativeClientRpc();
+	}
+
+	[ClientRpc]
+	private void InteractAlternativeClientRpc()
+	{
+		cuttingProgress++;
+
+		CuttingRecepySO cuttingRecipeSO = GetCuttingRecepySO(GetKitchenObject().GetKitchenObjectSO());
+		OnProgressChanged?.Invoke(this, new IHasProgressBar.OnProgressChangedEventArgs()
+		{
+			progressNormalised = (float)cuttingProgress / cuttingRecipeSO.cuttingProgressMax
+		});
+
+		OnCut?.Invoke(this, EventArgs.Empty);
+		OnAnyCut?.Invoke(this, EventArgs.Empty);
+	}
+
+	[ServerRpc(RequireOwnership = false)]
+	private void TestFinishingCuttingServerRpc()
+	{
+
+		if (cuttingProgress >= GetCuttingRecepySO(GetKitchenObject().GetKitchenObjectSO()).cuttingProgressMax)
+		{
+			KitchenObjectSO outputKitchenObjectSO = GetOutputForInput(GetKitchenObject().GetKitchenObjectSO());
+			KitchenObject.DestroyKitchenObject(GetKitchenObject());
+
+			KitchenObject.SpawnKitchenObject(outputKitchenObjectSO, this);
+		}
+	}
+
+	private bool HasOutputWithInput(KitchenObjectSO input)
+	{
 		CuttingRecepySO cuttingRecepySO = GetCuttingRecepySO(input);
 
-		if (cuttingRecepySO != null) {
+		if (cuttingRecepySO != null)
+		{
 			return true;
 		}
 		return false;
 	}
 
-	private KitchenObjectSO GetOutputForInput(KitchenObjectSO input) {
+	private KitchenObjectSO GetOutputForInput(KitchenObjectSO input)
+	{
 		CuttingRecepySO cuttingRecepySO = GetCuttingRecepySO(input);
 
-		if (cuttingRecepySO != null) {
+		if (cuttingRecepySO != null)
+		{
 			return cuttingRecepySO.output;
 		}
 		return null;
 	}
 
-	private CuttingRecepySO GetCuttingRecepySO(KitchenObjectSO input) {
-		foreach (CuttingRecepySO cuttingRecepySO in cuttingRecepySOArray) {
+	private CuttingRecepySO GetCuttingRecepySO(KitchenObjectSO input)
+	{
+		foreach (CuttingRecepySO cuttingRecepySO in cuttingRecepySOArray)
+		{
 			if (input == cuttingRecepySO.input)
 				return cuttingRecepySO;
 		}
