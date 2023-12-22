@@ -26,12 +26,36 @@ public class KitchenObjectMultiplayer : NetworkBehaviour
 		var kitchenObjectNetworkObject = kitchenObjectTransform.GetComponent<NetworkObject>();
 		kitchenObjectNetworkObject.Spawn();
 
-
-		kitchenObjectParentNetworkObjectReference.TryGet(out NetworkObject kitchenObjectParentNetworkObject);
-		var kitchenObjectParentInterface = kitchenObjectParentNetworkObject.GetComponent<IKitchenObjectParent>();
+		var kitchenObjectParentInterface = GetKitchenObjectParentFromNetworkObjectReference(kitchenObjectParentNetworkObjectReference);
 
 		kitchenObjectTransform.GetComponent<KitchenObject>().SetKitchenObjectParent(kitchenObjectParentInterface);
 	}
+
+	public void DestroyKitchenObject(KitchenObject kitchenObject)
+	{
+		DestroyKitchenObjectServerRpc(kitchenObject.NetworkObject);
+	}
+
+	[ServerRpc(RequireOwnership = false)]
+	private void DestroyKitchenObjectServerRpc(NetworkObjectReference kitchenObjectNetworkObjectReference)
+	{
+		kitchenObjectNetworkObjectReference.TryGet(out NetworkObject kitchenObjectNetworkObject);
+		var kitchenObject = kitchenObjectNetworkObject.GetComponent<KitchenObject>();
+
+
+		kitchenObject.DestroySelf();
+		ClearKitchenObjectForParentClientRpc(kitchenObjectNetworkObjectReference);
+	}
+
+	[ClientRpc]
+	private void ClearKitchenObjectForParentClientRpc(NetworkObjectReference kitchenObjectNetworkObjectReference)
+	{
+		kitchenObjectNetworkObjectReference.TryGet(out NetworkObject kitchenObjectNetworkObject);
+		var kitchenObject = kitchenObjectNetworkObject.GetComponent<KitchenObject>();
+
+		kitchenObject.ClearKitchenObjectForParent();
+	}
+
 
 	public KitchenObjectSO GetKitchenObject(int KitchenObjectIndex)
 	{
@@ -41,5 +65,11 @@ public class KitchenObjectMultiplayer : NetworkBehaviour
 	public int GetIndexOfKitchenObject(KitchenObjectSO kitchenObjectSO)
 	{
 		return kitchenObjectListSO.List.IndexOf(kitchenObjectSO);
+	}
+
+	private IKitchenObjectParent GetKitchenObjectParentFromNetworkObjectReference(NetworkObjectReference kitchenObjectParentNetworkObjectReference)
+	{
+		kitchenObjectParentNetworkObjectReference.TryGet(out NetworkObject kitchenObjectParentNetworkObject);
+		return kitchenObjectParentNetworkObject.GetComponent<IKitchenObjectParent>();
 	}
 }
