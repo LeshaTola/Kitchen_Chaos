@@ -14102,6 +14102,33 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7257614236878739125, guid: a03a181ba891f5146814e9345aed000d,
+        type: 3}
+      propertyPath: fryingRecipeSOArray.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7257614236878739125, guid: a03a181ba891f5146814e9345aed000d,
+        type: 3}
+      propertyPath: burningRecipeSOArray.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7257614236878739125, guid: a03a181ba891f5146814e9345aed000d,
+        type: 3}
+      propertyPath: fryingRecipeSOArray.Array.data[0]
+      value: 
+      objectReference: {fileID: 11400000, guid: 20b54d53e5c147e42865b7fa3339f887,
+        type: 2}
+    - target: {fileID: 7257614236878739125, guid: a03a181ba891f5146814e9345aed000d,
+        type: 3}
+      propertyPath: burningRecipeSOArray.Array.data[0]
+      value: 
+      objectReference: {fileID: 11400000, guid: c46e7bb546386b344868a34de5a974c5,
+        type: 2}
+    - target: {fileID: 8294666440907301936, guid: a03a181ba891f5146814e9345aed000d,
+        type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 789754595
+      objectReference: {fileID: 0}
     - target: {fileID: 8857816825542543915, guid: a03a181ba891f5146814e9345aed000d,
         type: 3}
       propertyPath: m_IsActive
