@@ -1,46 +1,60 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PauseGameUI : MonoBehaviour {
+public class PauseGameUI : MonoBehaviour
+{
 
 	[SerializeField] private Button resumeButton;
 	[SerializeField] private Button mainMenuButton;
 	[SerializeField] private Button optionsButton;
 
-	private void Awake() {
-		resumeButton.onClick.AddListener(() => {
+	private void Awake()
+	{
+		resumeButton.onClick.AddListener(() =>
+		{
 			GameManager.Instance.TogglePauseGame();
 		});
-		mainMenuButton.onClick.AddListener(() => {
+		mainMenuButton.onClick.AddListener(() =>
+		{
 			Loader.Load(Loader.Scene.MainMenu);
 		});
-		optionsButton.onClick.AddListener(() => {
+		optionsButton.onClick.AddListener(() =>
+		{
 			OptionsUI.Instance.Show();
 		});
 	}
 
-	private void Start() {
-		GameManager.Instance.OnGamePaused += GameManager_OnGamePaused;
-		GameManager.Instance.OnGameUnPaused += GameManager_OnGameUnpaused;
+	private void Start()
+	{
+		GameManager.Instance.OnLocalGamePaused += OnLocalGamePaused;
+		GameManager.Instance.OnLocalGameUnPaused += OnLocalGameUnpaused;
 
 		Hide();
 	}
 
-	private void GameManager_OnGameUnpaused(object sender, System.EventArgs e) {
+	private void OnDestroy()
+	{
+		GameManager.Instance.OnLocalGamePaused -= OnLocalGamePaused;
+		GameManager.Instance.OnLocalGameUnPaused -= OnLocalGameUnpaused;
+	}
+
+	private void OnLocalGameUnpaused(object sender, System.EventArgs e)
+	{
 		Hide();
 	}
 
-	private void GameManager_OnGamePaused(object sender, System.EventArgs e) {
+	private void OnLocalGamePaused(object sender, System.EventArgs e)
+	{
 		Show();
 	}
 
-	public void Show() {
+	public void Show()
+	{
 		gameObject.SetActive(true);
 	}
 
-	public void Hide() {
+	public void Hide()
+	{
 		gameObject.SetActive(false);
 
 	}

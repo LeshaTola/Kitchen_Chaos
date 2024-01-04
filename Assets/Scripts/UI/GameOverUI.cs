@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -7,25 +5,32 @@ public class GameOverUI : MonoBehaviour
 {
 	[SerializeField] TextMeshProUGUI countOfDeliveryText;
 
-	private void Start() {
+	private void Start()
+	{
 		GameManager.Instance.OnStateChanged += Instance_OnStateChanged;
+		Hide();
 	}
 
-	private void Instance_OnStateChanged(object sender, System.EventArgs e) {
-		if (GameManager.Instance.IsGameOver()) {
+	private void Instance_OnStateChanged(object sender, System.EventArgs e)
+	{
+		if (GameManager.Instance.IsGameOver())
+		{
 			Show();
 			countOfDeliveryText.text = DeliveryManager.Instance.GetDeliverySuccessed().ToString();
 		}
-		else {
+		else
+		{
 			Hide();
 		}
 	}
 
-	void Show() {
+	void Show()
+	{
 		gameObject.SetActive(true);
 	}
 
-	void Hide() {
+	void Hide()
+	{
 		gameObject.SetActive(false);
 	}
 }

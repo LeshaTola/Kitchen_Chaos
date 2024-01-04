@@ -1,7 +1,8 @@
 using TMPro;
 using UnityEngine;
 
-public class TutorialUI : MonoBehaviour {
+public class TutorialUI : MonoBehaviour
+{
 
 	[SerializeField] private TextMeshProUGUI keyMoveUpText;
 	[SerializeField] private TextMeshProUGUI keyMoveDownText;
@@ -11,24 +12,16 @@ public class TutorialUI : MonoBehaviour {
 	[SerializeField] private TextMeshProUGUI keyInteractAltText;
 	[SerializeField] private TextMeshProUGUI keyPauseText;
 
-	private void Start() {
+	private void Start()
+	{
 		GameInput.Instance.OnBindingRebind += GameInput_OnBindingRebind;
-		GameManager.Instance.OnStateChanged += GameManager_OnStateChanged;
+		GameManager.Instance.OnLocalPlayerSetReady += OnLocalPlayerSetReady;
 		UpdateVisual();
 		Show();
 	}
 
-	private void GameManager_OnStateChanged(object sender, System.EventArgs e) {
-		if (GameManager.Instance.IsCountdownTime()) {
-			Hide();
-		}
-	}
-
-	private void GameInput_OnBindingRebind(object sender, System.EventArgs e) {
-		UpdateVisual();
-	}
-
-	public void UpdateVisual() {
+	public void UpdateVisual()
+	{
 		keyMoveUpText.text = GameInput.Instance.GetBindingText(GameInput.Binding.MoveUp);
 		keyMoveDownText.text = GameInput.Instance.GetBindingText(GameInput.Binding.MoveDown);
 		keyMoveLeftText.text = GameInput.Instance.GetBindingText(GameInput.Binding.MoveLeft);
@@ -38,12 +31,23 @@ public class TutorialUI : MonoBehaviour {
 		keyPauseText.text = GameInput.Instance.GetBindingText(GameInput.Binding.Pause);
 	}
 
-	public void Hide() {
+	public void Hide()
+	{
 		gameObject.SetActive(false);
 	}
 
-	public void Show() {
+	public void Show()
+	{
 		gameObject.SetActive(true);
 	}
 
+	private void OnLocalPlayerSetReady()
+	{
+		Hide();
+	}
+
+	private void GameInput_OnBindingRebind(object sender, System.EventArgs e)
+	{
+		UpdateVisual();
+	}
 }
