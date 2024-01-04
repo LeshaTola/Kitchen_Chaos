@@ -128,11 +128,9 @@ public class StoveCounter : BaseCounter, IHasProgressBar
 				{
 					// И это что-то это тарелка
 					if (plateKitchenObject.TryToAddIngredient(GetKitchenObject().GetKitchenObjectSO()))
-						GetKitchenObject().DestroySelf();
+						KitchenObject.DestroyKitchenObject(GetKitchenObject());
 
-					state.Value = State.Idle;
-					burningTimer.Value = 0;
-					fryingTimer.Value = 0;
+					SetIdleStateServerRpc();
 				}
 			}
 			else

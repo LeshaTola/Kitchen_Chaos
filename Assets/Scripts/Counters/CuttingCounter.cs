@@ -47,10 +47,6 @@ public class CuttingCounter : BaseCounter, IHasProgressBar
 						KitchenObject.DestroyKitchenObject(GetKitchenObject());
 					}
 				}
-				else
-				{
-					// Если у игрока не тарелка
-				}
 			}
 			else
 			{
@@ -125,9 +121,9 @@ public class CuttingCounter : BaseCounter, IHasProgressBar
 
 	private bool HasOutputWithInput(KitchenObjectSO input)
 	{
-		CuttingRecepySO cuttingRecepySO = GetCuttingRecepySO(input);
+		CuttingRecepySO cuttingRecipeSO = GetCuttingRecepySO(input);
 
-		if (cuttingRecepySO != null)
+		if (cuttingRecipeSO != null)
 		{
 			return true;
 		}
