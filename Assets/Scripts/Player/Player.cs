@@ -28,11 +28,18 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 		if (IsOwner)
 		{
 			LocalInstance = this;
-			OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
+		}
 
-			transform.position = spawnPositionsList[(int)OwnerClientId];
+		OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
+
+		transform.position = spawnPositionsList[(int)OwnerClientId];
+
+		if (IsServer)
+		{
+			NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
 		}
 	}
+
 
 	private void Start()
 	{
@@ -177,5 +184,13 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 	public NetworkObject GetNetworkObject()
 	{
 		return NetworkObject;
+	}
+
+	private void OnClientDisconnectCallback(ulong clientId)
+	{
+		if (clientId == OwnerClientId && HasKitchenObject())
+		{
+			KitchenObject.DestroyKitchenObject(GetKitchenObject());
+		}
 	}
 }

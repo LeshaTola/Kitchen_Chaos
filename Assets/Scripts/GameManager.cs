@@ -38,6 +38,7 @@ public class GameManager : NetworkBehaviour
 
 	private bool isLocalGamePaused = false;
 	private bool isLocalPlayerReady = false;
+	private bool needToTestPause = false;
 
 	private void Awake()
 	{
@@ -48,6 +49,7 @@ public class GameManager : NetworkBehaviour
 	{
 		state.OnValueChanged += OnStateValueChanged;
 		multiplayerGamePause.OnValueChanged += OnMultiplayerGamePauseValueChanged;
+		NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
 
 		playerReadyDictionary = new Dictionary<ulong, bool>();
 		playerPauseDictionary = new Dictionary<ulong, bool>();
@@ -96,6 +98,26 @@ public class GameManager : NetworkBehaviour
 			case State.GaveOver:
 				break;
 		}
+	}
+
+	private void LateUpdate()
+	{
+		if (needToTestPause)
+		{
+			needToTestPause = false;
+			TestMultiplayerPause();
+		}
+	}
+
+	public void StartHost()
+	{
+		NetworkManager.Singleton.ConnectionApprovalCallback += ConnectionApprovalCollback;
+		NetworkManager.Singleton.StartHost();
+	}
+
+	public void StartClient()
+	{
+		NetworkManager.Singleton.StartClient();
 	}
 
 	private void GameInput_InteractEvent(object sender, EventArgs e)
@@ -182,18 +204,18 @@ public class GameManager : NetworkBehaviour
 	private void PauseMultiplayerGameServerRpc(ServerRpcParams serverRpcParams = default)
 	{
 		playerPauseDictionary[serverRpcParams.Receive.SenderClientId] = true;
-		ToggleMultiplayerPause();
+		TestMultiplayerPause();
 	}
 
 	[ServerRpc(RequireOwnership = false)]
 	private void UnPauseMultiplayerGameServerRpc(ServerRpcParams serverRpcParams = default)
 	{
 		playerPauseDictionary[serverRpcParams.Receive.SenderClientId] = false;
-		ToggleMultiplayerPause();
+		TestMultiplayerPause();
 
 	}
 
-	private void ToggleMultiplayerPause()
+	private void TestMultiplayerPause()
 	{
 		foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds)
 		{
@@ -225,4 +247,24 @@ public class GameManager : NetworkBehaviour
 			OnMultiplayerGameUnPaused?.Invoke();
 		}
 	}
+
+
+	private void OnClientDisconnectCallback(ulong clientId)
+	{
+		needToTestPause = true;
+	}
+
+	private void ConnectionApprovalCollback(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
+	{
+		if (state.Value == State.WaitingForReadiness)
+		{
+			response.Approved = true;
+			response.CreatePlayerObject = true;
+		}
+		else
+		{
+			response.Approved = false;
+		}
+	}
+
 }

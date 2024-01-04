@@ -1,9 +1,21 @@
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameOverUI : MonoBehaviour
 {
 	[SerializeField] TextMeshProUGUI countOfDeliveryText;
+	[SerializeField] Button goToMainMenuButton;
+
+	private void Awake()
+	{
+		goToMainMenuButton.onClick.AddListener(() =>
+		{
+			NetworkManager.Singleton.Shutdown();
+			Loader.Load(Loader.Scene.MainMenu);
+		});
+	}
 
 	private void Start()
 	{

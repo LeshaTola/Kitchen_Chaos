@@ -1,4 +1,3 @@
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,13 +10,13 @@ public class NetworkManagerUI : MonoBehaviour
 	{
 		HostButton.onClick.AddListener(() =>
 		{
-			NetworkManager.Singleton.StartHost();
+			GameManager.Instance.StartHost();
 			Hide();
 		});
 
 		ClientButton.onClick.AddListener(() =>
 		{
-			NetworkManager.Singleton.StartClient();
+			GameManager.Instance.StartClient();
 			Hide();
 		});
 
