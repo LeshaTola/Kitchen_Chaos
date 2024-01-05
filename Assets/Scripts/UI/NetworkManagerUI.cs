@@ -10,20 +10,14 @@ public class NetworkManagerUI : MonoBehaviour
 	{
 		HostButton.onClick.AddListener(() =>
 		{
-			GameManager.Instance.StartHost();
-			Hide();
+			KitchenGameMultiplayer.Instance.StartHost();
+			Loader.LoadNetwork(Loader.Scene.SelectCharacterScene);
 		});
 
 		ClientButton.onClick.AddListener(() =>
 		{
-			GameManager.Instance.StartClient();
-			Hide();
+			KitchenGameMultiplayer.Instance.StartClient();
 		});
 
-	}
-
-	private void Hide()
-	{
-		gameObject.SetActive(false);
 	}
 }

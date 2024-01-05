@@ -30,7 +30,7 @@ public class PlateKitchenObject : KitchenObject
 
 		if (!ingredientsList.Contains(kitchenObjectSO))
 		{
-			AddIngredientServerRpc(KitchenObjectMultiplayer.Instance.GetIndexOfKitchenObject(kitchenObjectSO));
+			AddIngredientServerRpc(KitchenGameMultiplayer.Instance.GetIndexOfKitchenObject(kitchenObjectSO));
 			return true;
 		}
 		else
@@ -48,7 +48,7 @@ public class PlateKitchenObject : KitchenObject
 	[ClientRpc]
 	private void AddIngredientClientRpc(int kitchenObjectSOIndex)
 	{
-		var kitchenObjectSO = KitchenObjectMultiplayer.Instance.GetKitchenObject(kitchenObjectSOIndex);
+		var kitchenObjectSO = KitchenGameMultiplayer.Instance.GetKitchenObject(kitchenObjectSOIndex);
 		ingredientsList.Add(kitchenObjectSO);
 		OnAddIngredient?.Invoke(this, new OnAddIngredientEventArgs
 		{

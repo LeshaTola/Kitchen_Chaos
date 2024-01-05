@@ -1,15 +1,37 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class KitchenObjectMultiplayer : NetworkBehaviour
+public class KitchenGameMultiplayer : NetworkBehaviour
 {
+	public static int MAX_CLIENT_COUNT = 4;
+
+	public event Action OnTryToConnecting;
+	public event Action OnFailToConnect;
+
 	[SerializeField] private KitchenObjectListSO kitchenObjectListSO;
 
-	public static KitchenObjectMultiplayer Instance { get; private set; }
+	public static KitchenGameMultiplayer Instance { get; private set; }
 
 	private void Awake()
 	{
 		Instance = this;
+		DontDestroyOnLoad(gameObject);
+	}
+
+	public void StartHost()
+	{
+		NetworkManager.Singleton.StartHost();
+		NetworkManager.Singleton.ConnectionApprovalCallback += ConnectionApprovalCollback;
+	}
+
+	public void StartClient()
+	{
+		OnTryToConnecting?.Invoke();
+
+		NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
+		NetworkManager.Singleton.StartClient();
 	}
 
 	public void SpawnKitchenObject(KitchenObjectSO kitchenObjectSO, IKitchenObjectParent kitchenObjectParent)
@@ -56,7 +78,6 @@ public class KitchenObjectMultiplayer : NetworkBehaviour
 		kitchenObject.ClearKitchenObjectForParent();
 	}
 
-
 	public KitchenObjectSO GetKitchenObject(int KitchenObjectIndex)
 	{
 		return kitchenObjectListSO.List[KitchenObjectIndex];
@@ -71,5 +92,29 @@ public class KitchenObjectMultiplayer : NetworkBehaviour
 	{
 		kitchenObjectParentNetworkObjectReference.TryGet(out NetworkObject kitchenObjectParentNetworkObject);
 		return kitchenObjectParentNetworkObject.GetComponent<IKitchenObjectParent>();
+	}
+
+	private void ConnectionApprovalCollback(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
+	{
+		if (!SceneManager.GetActiveScene().name.Equals(Loader.Scene.SelectCharacterScene.ToString()))
+		{
+			response.Approved = false;
+			response.Reason = "Game is already started";
+			return;
+		}
+
+		if (NetworkManager.ConnectedClients.Count == MAX_CLIENT_COUNT)
+		{
+			response.Approved = false;
+			response.Reason = "Game is full";
+			return;
+		}
+
+		response.Approved = true;
+	}
+
+	private void OnClientDisconnectCallback(ulong clientId)
+	{
+		OnFailToConnect?.Invoke();
 	}
 }

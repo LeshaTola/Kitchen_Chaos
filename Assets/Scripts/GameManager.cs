@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class GameManager : NetworkBehaviour
 {
-
 	public event EventHandler OnStateChanged;
 	public event EventHandler OnLocalGamePaused;
 	public event EventHandler OnLocalGameUnPaused;
@@ -16,6 +15,8 @@ public class GameManager : NetworkBehaviour
 
 	private Dictionary<ulong, bool> playerReadyDictionary;
 	private Dictionary<ulong, bool> playerPauseDictionary;
+
+	[SerializeField] private Transform playerTransform;
 
 	public static GameManager Instance { get; private set; }
 
@@ -37,33 +38,45 @@ public class GameManager : NetworkBehaviour
 	private NetworkVariable<State> state = new NetworkVariable<State>(State.WaitingForReadiness);
 
 	private bool isLocalGamePaused = false;
-	private bool isLocalPlayerReady = false;
 	private bool needToTestPause = false;
 
 	private void Awake()
 	{
 		Instance = this;
+
+		playerReadyDictionary = new Dictionary<ulong, bool>();
+		playerPauseDictionary = new Dictionary<ulong, bool>();
 	}
 
 	public override void OnNetworkSpawn()
 	{
 		state.OnValueChanged += OnStateValueChanged;
 		multiplayerGamePause.OnValueChanged += OnMultiplayerGamePauseValueChanged;
-		NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
 
-		playerReadyDictionary = new Dictionary<ulong, bool>();
-		playerPauseDictionary = new Dictionary<ulong, bool>();
+		if (IsServer)
+		{
+			NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
+			NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadEventCompleted; ;
+		}
 
-		countdownTimer.Value = countdownTimerMax;
-		playingTimeTimer.Value = 0;
 	}
 
+	private void OnLoadEventCompleted(string sceneName, UnityEngine.SceneManagement.LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
+	{
+		foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds)
+		{
+			var newPlayer = Instantiate(playerTransform);
+			newPlayer.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
+		}
+	}
 
 	private void Start()
 	{
 		GameInput.Instance.Pause += GameInput_Pause;
 		GameInput.Instance.InteractEvent += GameInput_InteractEvent;
 
+		countdownTimer.Value = countdownTimerMax;
+		playingTimeTimer.Value = 0;
 	}
 
 	private void Update()
@@ -109,22 +122,10 @@ public class GameManager : NetworkBehaviour
 		}
 	}
 
-	public void StartHost()
-	{
-		NetworkManager.Singleton.ConnectionApprovalCallback += ConnectionApprovalCollback;
-		NetworkManager.Singleton.StartHost();
-	}
-
-	public void StartClient()
-	{
-		NetworkManager.Singleton.StartClient();
-	}
-
 	private void GameInput_InteractEvent(object sender, EventArgs e)
 	{
 		if (state.Value == State.WaitingForReadiness)
 		{
-			isLocalPlayerReady = true;
 			OnLocalPlayerSetReady?.Invoke();
 
 			SetReadinessServerRpc();
@@ -248,23 +249,8 @@ public class GameManager : NetworkBehaviour
 		}
 	}
 
-
 	private void OnClientDisconnectCallback(ulong clientId)
 	{
 		needToTestPause = true;
 	}
-
-	private void ConnectionApprovalCollback(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
-	{
-		if (state.Value == State.WaitingForReadiness)
-		{
-			response.Approved = true;
-			response.CreatePlayerObject = true;
-		}
-		else
-		{
-			response.Approved = false;
-		}
-	}
-
 }
