@@ -69,9 +69,9 @@ public class LobbyUI : MonoBehaviour
 
 	private void UpdateLobbyList(List<Lobby> lobbies)
 	{
-		while (lobbyUIContainer.childCount > 0)
+		foreach (Transform child in lobbyUIContainer)
 		{
-			Destroy(lobbyUIContainer.GetChild(0));
+			Destroy(child.gameObject);
 		}
 
 		foreach (var lobby in lobbies)

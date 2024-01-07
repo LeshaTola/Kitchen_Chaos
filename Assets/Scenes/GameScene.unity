@@ -10705,7 +10705,7 @@ MonoBehaviour:
   playerTransform: {fileID: 8954175281904875103, guid: 8f3007b32750d8547964b4d3fc71dec1,
     type: 3}
   countdownTimerMax: 3
-  playingTimeTimerMax: 90
+  playingTimeTimerMax: 300
 --- !u!4 &1533452916
 Transform:
   m_ObjectHideFlags: 0

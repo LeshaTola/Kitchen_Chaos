@@ -296,7 +296,7 @@ public class GameLobby : MonoBehaviour
 			OnRefreshLobbies?.Invoke(queryResponse.Results);
 
 		}
-		catch (AuthenticationException e)
+		catch (LobbyServiceException e)
 		{
 			Debug.Log(e);
 		}
