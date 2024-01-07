@@ -10,6 +10,7 @@ public class HostIsDisconnectedUI : MonoBehaviour
 	{
 		goToMainMenuButton.onClick.AddListener(() =>
 		{
+			GameLobby.Instance.LeaveLobby();
 			NetworkManager.Singleton.Shutdown();
 			Loader.Load(Loader.Scene.MainMenu);
 		});
@@ -19,6 +20,11 @@ public class HostIsDisconnectedUI : MonoBehaviour
 	{
 		NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
 		Hide();
+	}
+
+	private void OnDestroy()
+	{
+		NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnectCallback;
 	}
 
 	void Show()
